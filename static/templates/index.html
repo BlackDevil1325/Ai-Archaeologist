@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Archaeologist 🏺 — Identify Ancient Artefacts from Photos</title>
+<meta name="description" content="Upload a photo of an archaeological artefact and get AI predictions of its period, category, region and closest known artefacts.">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top"><span class="brand-icon">🏺</span><span>AI&nbsp;Archaeologist</span></a>
+    <div class="nav-links">
+      <a href="#analyzer">Analyzer</a>
+      <a href="#library">Library</a>
+      <a href="#how">How it works</a>
+      <a class="nav-cta" href="#analyzer">Analyze ↓</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-inner">
+    <p class="eyebrow">🏺 &nbsp;Computer vision for cultural heritage</p>
+    <h1>Photograph an artefact.<br><span class="gold">Meet its civilisation.</span></h1>
+    <p class="lede">The AI Archaeologist examines colour, texture, shape and material cues in your photo,
+      compares it against a reference library of known artefacts, and predicts its
+      <strong>period</strong>, <strong>category</strong>, <strong>region</strong> — plus the
+      <strong>closest known matches</strong>.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num" id="statRefs">14</span><span class="stat-label">reference artefacts</span></div>
+      <div class="stat"><span class="stat-num">4</span><span class="stat-label">predictions per photo</span></div>
+      <div class="stat"><span class="stat-num">100%</span><span class="stat-label">offline &amp; private</span></div>
+    </div>
+    <a class="btn btn-primary btn-lg" href="#analyzer">🔍 &nbsp;Start analyzing</a>
+  </div>
+</header>
+
+<main>
+<!-- ============================ ANALYZER ============================ -->
+<section class="section" id="analyzer">
+  <div class="wrap">
+    <h2 class="section-title">🔍 Artefact Analyzer</h2>
+    <p class="section-sub">Upload a photo — or try one of the samples — add any context you know, and run the analysis.</p>
+
+    <div class="analyzer-grid">
+      <!-- LEFT: input -->
+      <div class="card input-card">
+        <h3>1 · Provide the artefact photo</h3>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload an artefact photo">
+          <input type="file" id="fileInput" accept="image/*" hidden>
+          <div class="dz-empty" id="dzEmpty">
+            <div class="dz-icon">📷</div>
+            <p><strong>Drag &amp; drop</strong> a photo here, or <span class="link">browse files</span></p>
+            <p class="dz-hint">JPG / PNG · max 10 MB · best with plain background</p>
+          </div>
+          <img class="dz-preview" id="dzPreview" alt="Artefact preview">
+          <button class="dz-remove" id="dzRemove" title="Remove photo">✕</button>
+        </div>
+
+        <div class="samples">
+          <p class="samples-label">No photo handy? Try a sample:</p>
+          <div class="sample-row" id="sampleRow"></div>
+        </div>
+
+        <h3>2 · Add context <span class="optional">(optional, improves accuracy)</span></h3>
+        <div class="form-grid">
+          <label>Where was it found?
+            <select id="foundRegion">
+              <option value="unknown">Unknown / not sure</option>
+              <option value="south-asia-indus">South Asia — Indus Valley (Harappa, Mohenjo-daro…)</option>
+              <option value="south-asia-south">South Asia — South India / Tamil Nadu</option>
+              <option value="south-asia-other">South Asia — elsewhere</option>
+              <option value="west-asia">West Asia — Mesopotamia / Middle East</option>
+              <option value="egypt">North Africa — Egypt</option>
+              <option value="greece">Mediterranean — Greece</option>
+              <option value="rome">Mediterranean — Rome / Italy</option>
+              <option value="east-asia">East Asia — China / Japan / SE Asia</option>
+            </select>
+          </label>
+          <label>What is it made of?
+            <select id="materialHint">
+              <option value="unknown">Unknown / not sure</option>
+              <option value="terracotta">Terracotta / fired clay</option>
+              <option value="ceramic">Painted / glazed ceramic</option>
+              <option value="clay">Raw clay tablet</option>
+              <option value="stone">Stone (granite, sandstone…)</option>
+              <option value="steatite">Steatite / soapstone</option>
+              <option value="bronze">Bronze / copper alloy</option>
+              <option value="gold">Gold / precious metal</option>
+            </select>
+          </label>
+        </div>
+        <label class="notes-label">Anything else? (inscriptions, place names, temple, motifs…)
+          <textarea id="notes" rows="2" placeholder="e.g. Found near Madurai, bronze dancing figure, ring of fire…"></textarea>
+        </label>
+
+        <button class="btn btn-primary btn-block" id="analyzeBtn">🏺 &nbsp;Analyze artefact</button>
+        <p class="error" id="formError" hidden></p>
+      </div>
+
+      <!-- RIGHT: results -->
+      <div class="card results-card" id="resultsCard">
+        <h3>3 · AI hypothesis</h3>
+        <div class="results-empty" id="resultsEmpty">
+          <div class="big-icon">🏛️</div>
+          <p>Your analysis will appear here.<br>Period · Category · Region · Similar artefacts</p>
+        </div>
+        <div class="loading" id="loading" hidden>
+          <div class="spinner"></div>
+          <p class="loading-step" id="loadingStep">Reading pixels…</p>
+          <div class="loading-bar"><div id="loadingFill"></div></div>
+        </div>
+        <div class="results" id="results" hidden></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LIBRARY ============================ -->
+<section class="section section-alt" id="library">
+  <div class="wrap">
+    <h2 class="section-title">📚 Reference Library</h2>
+    <p class="section-sub">The known artefacts the AI compares your photo against. Click any card to analyze it.</p>
+    <div class="lib-grid" id="libGrid"></div>
+  </div>
+</section>
+
+<!-- ============================ HOW ============================ -->
+<section class="section" id="how">
+  <div class="wrap">
+    <h2 class="section-title">⚙️ How it works</h2>
+    <p class="section-sub">A transparent, fully-offline pipeline — no black boxes, every prediction is explained.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><h4>👁️ See</h4><p>Extracts a 512-bin colour signature, texture, symmetry and shape cues, plus a k-means dominant-colour palette.</p></div>
+      <div class="step"><div class="step-num">2</div><h4>🧪 Sense material</h4><p>Heuristic vision rules score terracotta, bronze, stone, gold and painted-pottery surface signatures.</p></div>
+      <div class="step"><div class="step-num">3</div><h4>🔎 Compare</h4><p>Colour + style similarity ranks every reference artefact; the top-5 vote for period, category and region.</p></div>
+      <div class="step"><div class="step-num">4</div><h4>🧠 Fuse &amp; explain</h4><p>Your context (find-spot, material, notes) is fused in, dates are similarity-averaged, and the reasoning is shown.</p></div>
+    </div>
+    <div class="disclaimer">
+      <strong>⚠️ Honest limits:</strong> this is an educational stylistic-guessing demo with a small reference
+      library — not a professional authentication or dating service. Real archaeology needs excavation context,
+      lab analysis (TL/OSL, C-14, XRF) and expert eyes. Predictions improve as the library grows
+      (see <code>artifacts_db.json</code> + <code>static/ref/</code> to add your own).
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <p>🏺 <strong>AI Archaeologist</strong> · offline CBIR + heuristic fusion · built for heritage lovers</p>
+    <p class="muted">Reference photos: museum collections &amp; open archives — see library cards for sources.</p>
+  </div>
+</footer>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
